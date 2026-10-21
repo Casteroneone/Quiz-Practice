@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecture 2: Burn & Electrolyte Quiz</title>
+  <title>Lecture 2: Burn & Electrolyte Quiz (Fixed)</title>
   <style>
     body {
       font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -33,7 +33,6 @@
     }
     .question-title { font-size: 18px; line-height: 1.6; margin-bottom: 16px; color: #1e293b; }
     
-    /* Lab Table Styling */
     .lab-table {
       width: 100%;
       border-collapse: collapse;
@@ -50,7 +49,6 @@
     }
     .lab-table th { background: #edf2f7; color: #475569; font-weight: 600; }
     
-    /* Sub-Question Styling with Result Status */
     .sub-question {
       margin-top: 16px;
       padding: 16px;
@@ -130,6 +128,7 @@
       text-decoration: none;
     }
     .btn:hover { background-color: #4338ca; }
+    .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -148,7 +147,6 @@
 </div>
 
 <script>
-// Utilities for bounded dynamic numbers & shuffling
 function getRandomBounded(base, marginPct = 0.15, decimals = 1) {
   const min = base * (1 - marginPct);
   const max = base * (1 + marginPct);
@@ -157,7 +155,7 @@ function getRandomBounded(base, marginPct = 0.15, decimals = 1) {
 }
 
 function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
+  return [...array].sort(() => Math.random() - 0.5);
 }
 
 let userSelections = {};
@@ -171,20 +169,22 @@ function generateTBSAQuestion() {
       explanation: "• ลำตัวด้านหลังทั้งหมด = 18%<br>• ด้านหน้าศีรษะและคอ = 4.5%<br>• <i>หมายเหตุ:</i> แผลไหม้ Superficial (1st-degree) ที่แขนซ้ายจะไม่นำมาคำนวณใน %TBSA<br><strong>รวม %TBSA = 18 + 4.5 = 22.5%</strong>"
     },
     {
-      desc: "ผู้ใหญ่มีแผลไหม้ partial-thickness ที่ขากวาด้านหน้าทั้งหมด (9%) และลำตัวด้านหน้าทั้งหมด (18%) ร่วมกับแผลไหม้ full-thickness ที่อวัยวะเพศ (1%)",
+      desc: "ผู้ใหญ่มีแผลไหม้ partial-thickness ที่ขาขวาด้านหน้าทั้งหมด (9%) และลำตัวด้านหน้าทั้งหมด (18%) ร่วมกับแผลไหม้ full-thickness ที่อวัยวะเพศ (1%)",
       correct: 28,
-      explanation: "• ขากวาด้านหน้า = 9%<br>• ลำตัวด้านหน้าทั้งหมด = 18%<br>• อวัยวะเพศ (Perineum) = 1%<br><strong>รวม %TBSA = 9 + 18 + 1 = 28%</strong>"
+      explanation: "• ขาขวาด้านหน้า = 9%<br>• ลำตัวด้านหน้าทั้งหมด = 18%<br>• อวัยวะเพศ (Perineum) = 1%<br><strong>รวม %TBSA = 9 + 18 + 1 = 28%</strong>"
     }
   ];
 
   const selected = scenarios[Math.floor(Math.random() * scenarios.length)];
   const correctVal = selected.correct;
   
-  const distractors = [correctVal + 9, correctVal - 4.5, correctVal + 4.5];
-  let options = Array.from(new Set([`${correctVal}%`, ...distractors.map(d => `${d}%`)]));
-  while(options.length < 4) {
-    options.push(`${correctVal + Math.floor(Math.random() * 10 - 5)}%`);
-    options = Array.from(new Set(options));
+  const setOpts = new Set([`${correctVal}%`]);
+  const presets = [correctVal + 9, correctVal - 4.5, correctVal + 4.5, correctVal + 5, correctVal - 9];
+  
+  for (let p of presets) {
+    if (p > 0 && setOpts.size < 4) {
+      setOpts.add(`${Number(p.toFixed(1))}%`);
+    }
   }
 
   return {
@@ -193,8 +193,8 @@ function generateTBSAQuestion() {
     subQuestions: [
       {
         id: "tbsa_val",
-        title: "จงประเมิน %TBSA (1%TBSA เท่ากับเท่าใด%)",
-        options: shuffle(options),
+        title: "จงคำนวณหา %TBSA จากกรณีศึกษาข้างต้น",
+        options: shuffle(Array.from(setOpts)),
         answer: `${correctVal}%`
       }
     ],
@@ -206,18 +206,18 @@ function generateTBSAQuestion() {
 function generateABGQuestion() {
   const profiles = [
     {
-      ph: getRandomBounded(7.47, 0.02, 2),
-      paco2: Math.round(getRandomBounded(30, 0.05, 0)),
-      hco3: Math.round(getRandomBounded(21, 0.05, 0)),
+      ph: getRandomBounded(7.47, 0.01, 2),
+      paco2: Math.round(getRandomBounded(30, 0.03, 0)),
+      hco3: Math.round(getRandomBounded(20, 0.03, 0)),
       phState: "alkalemia",
       primary: "respiratory alkalosis",
       comp: "partially compensated",
       exp: "pH > 7.45 (Alkalemia), PaCO₂ < 35 mmHg (Primary Respiratory Alkalosis) และ HCO₃⁻ < 22 mmol/L (มีการชดเชยทางเมตาบอลิกแล้วบางส่วน)"
     },
     {
-      ph: getRandomBounded(7.28, 0.02, 2),
-      paco2: Math.round(getRandomBounded(52, 0.05, 0)),
-      hco3: Math.round(getRandomBounded(28, 0.05, 0)),
+      ph: getRandomBounded(7.28, 0.01, 2),
+      paco2: Math.round(getRandomBounded(52, 0.03, 0)),
+      hco3: Math.round(getRandomBounded(28, 0.03, 0)),
       phState: "acidemia",
       primary: "respiratory acidosis",
       comp: "partially compensated",
@@ -228,7 +228,7 @@ function generateABGQuestion() {
   const p = profiles[Math.floor(Math.random() * profiles.length)];
 
   return {
-    category: "แก็สในเลือด (ABG)",
+    category: "แก๊สในเลือด (ABG)",
     prompt: "ผู้ใหญ่หายใจเร็วต่อเนื่องและเริ่มมีการชดเชยทางเมตาบอลิก ผล ABG แสดงดังต่อไปนี้",
     labData: [
       { name: "pH", val: p.ph },
@@ -261,14 +261,21 @@ function generateABGQuestion() {
 
 // Generator 3: Electrolyte Interpretation
 function generateElectrolyteQuestion() {
-  const kVal = getRandomBounded(6.4, 0.08, 1);
-  const naVal = Math.round(getRandomBounded(138, 0.03, 0));
-  const caVal = getRandomBounded(9.2, 0.03, 1);
-  const mgVal = getRandomBounded(2.0, 0.03, 1);
+  const kVal = getRandomBounded(6.4, 0.05, 1);
+  const naVal = 138; // คุม Normal range เพื่อป้องกัน Bug เฉลยผิดพลาด
+  const caVal = 9.2;
+  const mgVal = 2.0;
+
+  // Dynamic Validation เช็คช่วงปกติ
+  const abnormalList = [];
+  if (kVal < 3.5 || kVal > 5.0) abnormalList.push("K⁺");
+  if (naVal < 135 || naVal > 145) abnormalList.push("Na⁺");
+  if (caVal < 8.5 || caVal > 10.5) abnormalList.push("total serum Ca");
+  if (mgVal < 1.7 || mgVal > 2.2) abnormalList.push("Mg²⁺");
 
   return {
     category: "แปลผลอิเล็กโทรไลต์",
-    prompt: "ผู้ใหญ่โรคไตเรื้อรังใช้ ACE inhibitor ร่วมกับยาขับปัสสาวะชนิดเก็บโพแทสเซียม มีอ่อนแรง ผลตรวจแสดงดังต่อไปนี้",
+    prompt: "ผู้ใหญ่โรคไตเรื้อรังใช้ ACE inhibitor ร่วมกับยาขับปัสสาวะชนิดเก็บโพแทสเซียม มีอาการอ่อนแรง ผลตรวจแสดงดังต่อไปนี้",
     labData: [
       { name: "Na⁺", val: `${naVal} mEq/L` },
       { name: "K⁺", val: `${kVal} mEq/L` },
@@ -281,7 +288,7 @@ function generateElectrolyteQuestion() {
         title: "1. ค่าที่ผิดปกติ (เลือกทั้งหมด)",
         isMulti: true,
         options: ["Na⁺", "K⁺", "total serum Ca", "Mg²⁺"],
-        answer: ["K⁺"]
+        answer: abnormalList
       },
       {
         id: "urgent_problem",
@@ -411,9 +418,20 @@ function selectOption(sqId, optionVal, isMulti, btnElement) {
   }
 }
 
-// Check answers ITEM-BY-ITEM and display individual correctness
 function checkAnswer() {
   const q = questions[currentIndex];
+
+  // Validation: บังคับให้ผู้ตอบเลือกคำตอบให้ครบทุกข้อก่อนตรวจ
+  const answeredCount = Object.keys(userSelections).filter(key => {
+    const val = userSelections[key];
+    return Array.isArray(val) ? val.length > 0 : val !== undefined;
+  }).length;
+
+  if (answeredCount < q.subQuestions.length) {
+    alert("กรุณาตอบคำถามย่อยให้ครบถ้วนก่อนกดตรวจคำตอบครับ");
+    return;
+  }
+
   let overallCorrect = true;
 
   q.subQuestions.forEach(sq => {
@@ -422,7 +440,6 @@ function checkAnswer() {
     const tagElement = document.getElementById(`tag-${sq.id}`);
     let isItemCorrect = false;
 
-    // Evaluate single vs multi-choice
     if (sq.isMulti) {
       const uSet = new Set(userAns || []);
       const aSet = new Set(sq.answer);
@@ -437,13 +454,11 @@ function checkAnswer() {
 
     if (!isItemCorrect) overallCorrect = false;
 
-    // Apply visual status to individual sub-question card
     cardElement.classList.add(isItemCorrect ? "status-correct" : "status-incorrect");
     tagElement.style.display = "inline-block";
     tagElement.className = `status-tag ${isItemCorrect ? 'correct' : 'incorrect'}`;
     tagElement.innerText = isItemCorrect ? "✓ ถูกต้อง" : "✗ ผิด";
 
-    // Highlight option buttons individually inside this sub-question
     const buttons = cardElement.querySelectorAll(".option-btn");
     buttons.forEach(btn => {
       btn.disabled = true;
@@ -458,13 +473,13 @@ function checkAnswer() {
         } else if (isSelected && !isAnswer) {
           btn.classList.add("incorrect");
         } else if (!isSelected && isAnswer) {
-          btn.classList.add("correct"); // Show missed correct options
+          btn.classList.add("correct");
         }
       } else {
         if (optVal === sq.answer) {
-          btn.classList.add("correct"); // Highlight correct answer
+          btn.classList.add("correct");
         } else if (userAns === optVal) {
-          btn.classList.add("incorrect"); // Highlight user's wrong choice
+          btn.classList.add("incorrect");
         }
       }
     });
@@ -472,7 +487,6 @@ function checkAnswer() {
 
   if (overallCorrect) score++;
 
-  // Show bottom explanation summary
   const feedbackBox = document.getElementById("feedback-box");
   feedbackBox.style.display = "block";
   feedbackBox.innerHTML = `
