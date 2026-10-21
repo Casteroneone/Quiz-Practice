@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture 4: Urological Surgical Nursing Quiz</title>
+  <style>
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+      color: #0f172a;
+    }
+    .quiz-card {
+      max-width: 720px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .badge {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .question-title { font-size: 18px; line-height: 1.6; margin-bottom: 16px; color: #1e293b; font-weight: 600; }
+    
+    .lab-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #f8fafc;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    .lab-table th, .lab-table td {
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .lab-table th { background: #edf2f7; color: #475569; font-weight: 600; }
+    
+    .sub-question {
+      margin-top: 16px;
+      padding: 16px;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .sub-question.status-correct {
+      border-color: #22c55e;
+      background-color: #f0fdf4;
+    }
+    .sub-question.status-incorrect {
+      border-color: #ef4444;
+      background-color: #fef2f2;
+    }
+
+    .sub-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-tag {
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status-tag.correct { color: #15803d; background: #dcfce7; }
+    .status-tag.incorrect { color: #b91c1c; background: #fee2e2; }
+
+    .options-grid { display: flex; flex-direction: column; gap: 8px; }
+    .option-btn {
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      background-color: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .option-btn:hover:not(:disabled) { background-color: #f1f5f9; border-color: #94a3b8; }
+    .option-btn.selected { background-color: #e0e7ff; border-color: #6366f1; color: #312e81; }
+    .option-btn.correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; font-weight: 600; }
+    .option-btn.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+    
+    .feedback-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      border-left: 4px solid #4f46e5;
+      display: none;
+      line-height: 1.6;
+    }
+    .controls { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .btn {
+      padding: 10px 20px;
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background-color: #4338ca; }
+  </style>
+</head>
+<body>
+
+<div class="quiz-card" id="quiz-card">
+  <span class="badge" id="type-badge">Urological Nursing</span>
+  <div class="question-title" id="question-text">กำลังโหลดแบบทดสอบ...</div>
+  <div id="lab-display"></div>
+  <div id="sub-questions-container"></div>
+  <div class="feedback-box" id="feedback-box"></div>
+  <div class="controls">
+    <span id="progress-text" style="font-size: 14px; color: #64748b;"></span>
+    <button class="btn" id="check-btn" onclick="checkAnswer()">ตรวจคำตอบ</button>
+    <button class="btn" id="next-btn" style="display:none;" onclick="nextQuestion()">ข้อถัดไป</button>
+  </div>
+</div>
+
+<script>
+function shuffle(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
+let userSelections = {};
+
+// --- Question Generators Based on Lecture 4 ---
+
+// 1. Urinary Tract Obstruction Pathophysiology
+function generateObstructionQuestion() {
+  return {
+    category: "ภาวะอุดกั้นทางเดินปัสสาวะ (Obstruction)",
+    prompt: "ผู้ป่วยชายอายุ 68 ปี มีภาวะ Bladder Outlet Obstruction (BOO) จากต่อมลูกหมากโตมาเป็นเวลานานโดยไม่ได้รับการรักษา พยาธิสภาพของระบบทางเดินปัสสาวะจะเปลี่ยนแปลงตามลำดับอย่างไร",
+    subQuestions: [
+      {
+        id: "patho_seq",
+        title: "1. การเปลี่ยนแปลงของกล้ามเนื้อกระเพาะปัสสาวะในระยะแรก (Compensatory phase) คืออะไร",
+        options: [
+          "Detrusor muscle hypertrophy เกิด Trabeculation และ Diverticulum",
+          "Detrusor muscle Atrophy และโป่งพองทันที",
+          "เกิด Hydronephrosis โดยกระเพาะปัสสาวะไม่เปลี่ยนแปลง",
+          "ท่อไตตีบแคบลงทันที"
+        ],
+        answer: "Detrusor muscle hypertrophy เกิด Trabeculation และ Diverticulum"
+      },
+      {
+        id: "patho_complication",
+        title: "2. หากปล่อยให้เกิดการอุดกั้นเรื้อรัง ผลกระทบขั้นร้ายแรงที่จะเกิดขึ้นตามลำดับคืออะไร (เลือกตอบข้อที่ถูกต้องที่สุด)",
+        options: [
+          "Hydroureter -> Hydronephrosis -> Renal Failure -> Uremia",
+          "Renal Failure -> Hydronephrosis -> Hydroureter",
+          "Hydronephrosis -> Detrusor hypertrophy -> Renal Failure",
+          "Uremia -> Hydroureter -> Bladder Diverticulum"
+        ],
+        answer: "Hydroureter -> Hydronephrosis -> Renal Failure -> Uremia"
+      }
+    ],
+    explanation: "เมื่อเกิด Bladder Outlet Obstruction ร่างกายจะชดเชยโดยสร้าง Detrusor muscle hypertrophy ทำให้เห็นเป็น Trabeculation และ Diverticulum เมื่อกล้ามเนื้อเริ่มอ่อนแอ (Decompensation) แรงดันปัสสาวะที่ค้างจะดันย้อนกลับไปทำให้เกิด Hydroureter -> Hydronephrosis -> ไตสูญเสียการทำงาน (Renal Failure) และเกิด Uremia ตามลำดับ"
+  };
+}
+
+// 2. Urolithiasis & Interventions
+function generateUrolithiasisQuestion() {
+  const crVal = (Math.random() * (2.2 - 0.8) + 0.8).toFixed(1);
+  const isHighCr = parseFloat(crVal) > 1.5;
+
+  return {
+    category: "โรคนิ่วและการรักษา (Urolithiasis)",
+    prompt: `ผู้ป่วยชายมีอาการปวดบิดเกร็งบริเวณสีข้างร้าวลงขาหนีบ (Ureteric colic) ผลการตรวจทางห้องปฏิบัติการพบค่า Serum Creatinine = ${crVal} mg/dL`,
+    labData: [
+      { name: "Serum Creatinine", val: `${crVal} mg/dL (ค่าปกติ 0.6 - 1.2)` },
+      { name: "Urine Examination", val: "RBC Many/HPF, WBC 1-2/HPF" }
+    ],
+    subQuestions: [
+      {
+        id: "diag_test",
+        title: "1. จากค่า Serum Creatinine ข้างต้น การตรวจทางรังสีวิทยาใดที่ไม่ควรทำ (Contraindication) เนื่องจากเสี่ยงต่อภาวะไตวายเพิ่มขึ้น",
+        options: [
+          "IVP (Intravenous pyelogram)",
+          "Ultrasound KUB",
+          "KUB Plain Film",
+          "MRI Renal"
+        ],
+        answer: "IVP (Intravenous pyelogram)"
+      },
+      {
+        id: "stone_treatment",
+        title: "2. หากผู้ป่วยได้รับการรักษาด้วยวิธี RIRS (Retrograde Intrarenal Surgery) ข้อใดกล่าวถูกต้องเกี่ยวกับหัตถการนี้",
+        options: [
+          "ใช้กล้องชนิดปรับโค้งงอได้ (Flexible ureteroscope) ผ่านท่อปัสสาวะเข้าสู่ไต โดยไม่มีแผลผ่าตัด (No Cut / No Hole)",
+          "ต้องเจาะรูผ่านผิวหนังบริเวณบั้นเอวเพื่อสอดกล้องเข้าไปในไต",
+          "ใช้คลื่นเสียง shockwave จากภายนอกร่างกายโดยไม่ใช้กล้อง",
+          "เป็นการผ่าตัดเปิดหน้าท้องเพื่อนำนิ่วออก"
+        ],
+        answer: "ใช้กล้องชนิดปรับโค้งงอได้ (Flexible ureteroscope) ผ่านท่อปัสสาวะเข้าสู่ไต โดยไม่มีแผลผ่าตัด (No Cut / No Hole)"
+      },
+      {
+        id: "prevent_recurrence",
+        title: "3. คำแนะนำในการป้องกันการเกิดนิ่วซ้ำที่ถูกต้อง (เลือกทั้งหมดที่ถูกต้อง)",
+        isMulti: true,
+        options: [
+          "ดื่มน้ำมากกว่า 2,000 - 3,000 cc/วัน",
+          "ดื่มน้ำมะนาววันละแก้วเพื่อเพิ่มระดับซิเตรท (Citrate)",
+          "รับประทานอาหารที่มีออกซาเลตสูง เช่น ผักโขม ชะพลู หน่อไม้ ในปริมาณมาก",
+          "หลีกเลี่ยงเครื่องดื่มโคล่าและลดอาหารเค็ม/โซเดียมสูง"
+        ],
+        answer: [
+          "ดื่มน้ำมากกว่า 2,000 - 3,000 cc/วัน",
+          "ดื่มน้ำมะนาววันละแก้วเพื่อเพิ่มระดับซิเตรท (Citrate)",
+          "หลีกเลี่ยงเครื่องดื่มโคล่าและลดอาหารเค็ม/โซเดียมสูง"
+        ]
+      }
+    ],
+    explanation: `• หากค่า Cr > 1.5 mg/dL ไม่ควรฉีดสารทึบรังสีทำ IVP เพราะอาจทำให้เกิดภาวะไตเสื่อม/ไตวายเพิ่มขึ้น<br>• RIRS เป็นเทคโนโลยีส่องกล้องสายอ่อนผ่านท่อปัสสาวะ "No Cut, No Hole"<br>• การป้องกันนิ่วซ้ำ: ดื่มน้ำมากๆ (>2-3 L), เพิ่มซิเตรท (น้ำมะนาว), หลีกเลี่ยงอาหารออกซาเลตสูง (ผักโขม, ชะพลู, หน่อไม้), ลดโซเดียม และหลีกเลี่ยงโคล่า`
+  };
+}
+
+// 3. BPH, TURP & CBI Management
+function generateTURPCBIQuestion() {
+  const grades = [
+    { grade: 0, desc: "ปัสสาวะสีเหลืองใส มองเห็นตัวอักษรชัดเจน", rate: "125-250 cc/hr (8-16 หยด/15 วินาที)" },
+    { grade: 1, desc: "ปัสสาวะสีแดงจาง มองเห็นตัวอักษรชัดเจน", rate: "500 cc/hr (32 หยด/15 วินาที)" },
+    { grade: 2, desc: "ปัสสาวะสีแดง มองเห็นตัวอักษรไม่ชัดเจน", rate: "1,000 cc/hr (64 หยด/15 วินาที)" },
+    { grade: 3, desc: "ปัสสาวะสีแดงเข้ม มองไม่เห็นตัวอักษร", rate: "2,000 cc/hr (128 หยด/15 วินาที)" }
+  ];
+  
+  const selectedGrade = grades[Math.floor(Math.random() * grades.length)];
+
+  return {
+    category: "การดูแลหลังผ่าตัด TURP & สวนล้าง CBI",
+    prompt: `ผู้ป่วยชายหลังผ่าตัด TURP วันที่ 1 ใส่สายสวนปัสสาวะ 3-way Foley catheter ทำ Continuous Bladder Irrigation (CBI) ประเมินลักษณะปัสสาวะในถุงพบ: "${selectedGrade.desc}" (Grade ${selectedGrade.grade} Hematuria)`,
+    subQuestions: [
+      {
+        id: "cbi_rate",
+        title: "1. อัตราการปรับความเร็วหยดน้ำยาสวนล้าง Normal Saline (CBI) ที่เหมาะสมตาม Grade of Hematuria นี้คือเท่าใด",
+        options: shuffle([
+          "125-250 cc/hr (8-16 หยด/15 วินาที)",
+          "500 cc/hr (32 หยด/15 วินาที)",
+          "1,000 cc/hr (64 หยด/15 วินาที)",
+          "2,000 cc/hr (128 หยด/15 วินาที)"
+        ]),
+        answer: selectedGrade.rate
+      },
+      {
+        id: "cbi_troubleshoot",
+        title: "2. หากผู้ป่วยบ่นปวดเกร็งท้องน้อย (Bladder spasm) และไม่มีน้ำปัสสาวะไหลออกจากสายสวน พยาบาลควรปฏิบัติอย่างไรเป็นอันดับแรก",
+        options: [
+          "ตรวจดูสายสวนปัสสาวะว่าพับย่อ หักงอ หรือมีลิ่มเลือดอุดกั้น (Clot retention) หรือไม่",
+          "ฉีดยาแก้ปวด Opioid ทันที",
+          "ปลดสาย CBI ออกทันที",
+          "รายงานแพทย์เพื่อนำเข้าห้องผ่าตัดด่วน"
+        ],
+        answer: "ตรวจดูสายสวนปัสสาวะว่าพับย่อ หักงอ หรือมีลิ่มเลือดอุดกั้น (Clot retention) หรือไม่"
+      },
+      {
+        id: "discharge_teaching",
+        title: "3. คำแนะนำก่อนกลับบ้านสำหรับผู้ป่วยหลังผ่าตัด TURP (เลือกทั้งหมดที่ถูกต้อง)",
+        isMulti: true,
+        options: [
+          "ฝึกขมิบช่องหูรูดก้น (Kegel exercise) อย่างต่อเนื่องเพื่อป้องกันปัสสาวะเล็ด",
+          "หลีกเลี่ยงการยกของหนัก การเบ่งถ่ายอุจจาระ และการเดินทางไกลในช่วง 8-12 สัปดาห์",
+          "ดื่มน้ำอย่างต่อเนื่องมากกว่าวันละ 2,000 cc",
+          "เบ่งปัสสาวะแรงๆ เพื่อให้ปัสสาวะออกหมด"
+        ],
+        answer: [
+          "ฝึกขมิบช่องหูรูดก้น (Kegel exercise) อย่างต่อเนื่องเพื่อป้องกันปัสสาวะเล็ด",
+          "หลีกเลี่ยงการยกของหนัก การเบ่งถ่ายอุจจาระ และการเดินทางไกลในช่วง 8-12 สัปดาห์",
+          "ดื่มน้ำอย่างต่อเนื่องมากกว่าวันละ 2,000 cc"
+        ]
+      }
+    ],
+    explanation: `• การปรับ CBI จะอ้างอิงตาม Grade of Hematuria โดย Grade 0 = 125-250 cc/hr, Grade 1 = 500 cc/hr, Grade 2 = 1,000 cc/hr, Grade 3 = 2,000 cc/hr เพื่อป้องกัน Clot retention<br>• เมื่อเกิด Bladder Spasm ต้องเช็คการอุดกั้นหรือสายพับก่อนเสมอ<br>• ข้อห้ามหลัง TURP: ห้ามเบ่งปัสสาวะแรง ห้ามยกของหนัก/เบ่งถ่ายใน 8-12 สัปดาห์แรกเพื่อป้องกันการตกเลือดซ้ำ`
+  };
+}
+
+// 4. Bladder Cancer & Radical Cystectomy / Stoma Care
+function generateBladderCancerQuestion() {
+  return {
+    category: "มะเร็งกระเพาะปัสสาวะและการดูแล Stoma",
+    prompt: "ผู้ป่วยชายอายุ 62 ปี ประวัติสูบบุหรี่จัด มารับการรักษาด้วยอาการปัสสาวะเป็นเลือดสดแบบไม่ปวด (Painless gross hematuria) ได้รับการวินิจฉัยเป็น Bladder Cancer ระยะลุกลาม ทำผ่าตัด Radical Cystectomy with Ileal Conduit (Ileobladder)",
+    subQuestions: [
+      {
+        id: "stoma_normal",
+        title: "1. ลักษณะของทวารเทียมทางเดินปัสสาวะ (Stoma / Ileal conduit) ที่ปกติหลังผ่าตัดควรมีลักษณะอย่างไร",
+        options: [
+          "สีชมพูหรือแดงสด ยื่นออกมาประมาณ 1 ซม. ชุ่มชื้น มีเมือก (Mucus) ปนปัสสาวะเล็กน้อย",
+          "สีม่วงคล้ำหรือซีดขาว แห้ง และไม่มีน้ำปัสสาวะไหล",
+          "สีดำ แข็ง และบุ๋มลงไปใต้ผิวหนัง",
+          "มีผื่นแดงและมีแผลเปื่อยรอบ Stoma"
+        ],
+        answer: "สีชมพูหรือแดงสด ยื่นออกมาประมาณ 1 ซม. ชุ่มชื้น มีเมือก (Mucus) ปนปัสสาวะเล็กน้อย"
+      },
+      {
+        id: "stoma_emergency",
+        title: "2. อาการผิดปกติของ Stoma ในข้อใดที่ถือเป็นภาวะเร่งด่วนที่ต้องแจ้งแพทย์ทันที",
+        options: [
+          "Stoma มีสีม่วงคล้ำหรือสีดำ (บ่งบอกถึงการขาดเลือดไปเลี้ยง / Necrosis)",
+          "มีเมือกสีขาวปนออกมากับปัสสาวะเล็กน้อย",
+          "ผิวหนังรอบ Stoma มีสีชมพูปกติ",
+          "ปัสสาวะไหลใสต่อเนื่องใส่ถุงรองรับ"
+        ],
+        answer: "Stoma มีสีม่วงคล้ำหรือสีดำ (บ่งบอกถึงการขาดเลือดไปเลี้ยง / Necrosis)"
+      }
+    ],
+    explanation: "• อาการสำคัญของมะเร็งกระเพาะปัสสาวะคือ Painless gross hematuria (80%)<br>• Stoma ที่ปกติจะสีแดง/ชมพูสด ยื่นนูน ~1 cm และเนื่องจากทำจากลำไส้เล็ก (Ileum) จึงมีคราบเมือก (Mucus) ออกมาปนกับปัสสาวะได้เป็นเรื่องปกติ<br>• หาก Stoma เปลี่ยนเป็นสีม่วงคล้ำหรือสีดำ แสดงถึง Stoma Ischemia/Necrosis ต้องรายงานแพทย์ทันที"
+  };
+}
+
+function buildQuestionBank(totalRequested) {
+  const bank = [];
+  const generators = [
+    generateObstructionQuestion,
+    generateUrolithiasisQuestion,
+    generateTURPCBIQuestion,
+    generateBladderCancerQuestion
+  ];
+
+  for (let i = 0; i < totalRequested; i++) {
+    const genFunc = generators[i % generators.length];
+    bank.push(genFunc());
+  }
+
+  return shuffle(bank);
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const totalRequested = parseInt(urlParams.get('count')) || 5;
+
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+
+function initQuiz() {
+  questions = buildQuestionBank(totalRequested);
+  currentIndex = 0;
+  score = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  userSelections = {};
+  const q = questions[currentIndex];
+  
+  document.getElementById("type-badge").innerText = q.category;
+  document.getElementById("question-text").innerText = q.prompt;
+  document.getElementById("progress-text").innerText = `ข้อที่ ${currentIndex + 1} จาก ${questions.length}`;
+
+  const labContainer = document.getElementById("lab-display");
+  labContainer.innerHTML = "";
+  if (q.labData) {
+    let tableHTML = `<table class="lab-table"><thead><tr><th>รายการตรวจ / ผล Lab</th><th>ค่าที่ตรวจได้</th></tr></thead><tbody>`;
+    q.labData.forEach(row => {
+      tableHTML += `<tr><td><strong>${row.name}</strong></td><td>${row.val}</td></tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+    labContainer.innerHTML = tableHTML;
+  }
+
+  const subContainer = document.getElementById("sub-questions-container");
+  subContainer.innerHTML = "";
+
+  q.subQuestions.forEach((sq) => {
+    const sqDiv = document.createElement("div");
+    sqDiv.className = "sub-question";
+    sqDiv.id = `sub-card-${sq.id}`;
+
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "sub-title";
+    titleDiv.innerHTML = `<span>${sq.title}</span><span class="status-tag" id="tag-${sq.id}" style="display:none;"></span>`;
+    sqDiv.appendChild(titleDiv);
+
+    const optGrid = document.createElement("div");
+    optGrid.className = "options-grid";
+
+    sq.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerText = opt;
+      btn.dataset.sqid = sq.id;
+      btn.dataset.optval = opt;
+      btn.onclick = () => selectOption(sq.id, opt, sq.isMulti, btn);
+      optGrid.appendChild(btn);
+    });
+
+    sqDiv.appendChild(optGrid);
+    subContainer.appendChild(sqDiv);
+  });
+
+  document.getElementById("feedback-box").style.display = "none";
+  document.getElementById("check-btn").style.display = "inline-block";
+  document.getElementById("next-btn").style.display = "none";
+}
+
+function selectOption(sqId, optionVal, isMulti, btnElement) {
+  if (isMulti) {
+    if (!userSelections[sqId]) userSelections[sqId] = [];
+    const index = userSelections[sqId].indexOf(optionVal);
+    
+    if (index > -1) {
+      userSelections[sqId].splice(index, 1);
+      btnElement.classList.remove("selected");
+    } else {
+      userSelections[sqId].push(optionVal);
+      btnElement.classList.add("selected");
+    }
+  } else {
+    userSelections[sqId] = optionVal;
+    const parentGrid = btnElement.parentElement;
+    Array.from(parentGrid.children).forEach(child => child.classList.remove("selected"));
+    btnElement.classList.add("selected");
+  }
+}
+
+function checkAnswer() {
+  const q = questions[currentIndex];
+
+  // Validation: Check if all sub-questions are answered
+  const answeredCount = Object.keys(userSelections).filter(key => {
+    const val = userSelections[key];
+    return Array.isArray(val) ? val.length > 0 : val !== undefined;
+  }).length;
+
+  if (answeredCount < q.subQuestions.length) {
+    alert("กรุณาตอบคำถามย่อยให้ครบถ้วนก่อนกดตรวจคำตอบครับ");
+    return;
+  }
+
+  let overallCorrect = true;
+
+  q.subQuestions.forEach(sq => {
+    const userAns = userSelections[sq.id];
+    const cardElement = document.getElementById(`sub-card-${sq.id}`);
+    const tagElement = document.getElementById(`tag-${sq.id}`);
+    let isItemCorrect = false;
+
+    if (sq.isMulti) {
+      const uSet = new Set(userAns || []);
+      const aSet = new Set(sq.answer);
+      if (uSet.size === aSet.size && [...uSet].every(val => aSet.has(val))) {
+        isItemCorrect = true;
+      }
+    } else {
+      if (userAns === sq.answer) {
+        isItemCorrect = true;
+      }
+    }
+
+    if (!isItemCorrect) overallCorrect = false;
+
+    cardElement.classList.add(isItemCorrect ? "status-correct" : "status-incorrect");
+    tagElement.style.display = "inline-block";
+    tagElement.className = `status-tag ${isItemCorrect ? 'correct' : 'incorrect'}`;
+    tagElement.innerText = isItemCorrect ? "✓ ถูกต้อง" : "✗ ผิด";
+
+    const buttons = cardElement.querySelectorAll(".option-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      const optVal = btn.dataset.optval;
+
+      if (sq.isMulti) {
+        const isSelected = (userAns || []).includes(optVal);
+        const isAnswer = sq.answer.includes(optVal);
+
+        if (isSelected && isAnswer) {
+          btn.classList.add("correct");
+        } else if (isSelected && !isAnswer) {
+          btn.classList.add("incorrect");
+        } else if (!isSelected && isAnswer) {
+          btn.classList.add("correct");
+        }
+      } else {
+        if (optVal === sq.answer) {
+          btn.classList.add("correct");
+        } else if (userAns === optVal) {
+          btn.classList.add("incorrect");
+        }
+      }
+    });
+  });
+
+  if (overallCorrect) score++;
+
+  const feedbackBox = document.getElementById("feedback-box");
+  feedbackBox.style.display = "block";
+  feedbackBox.innerHTML = `
+    <div style="color: ${overallCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold; margin-bottom: 6px;">
+      ${overallCorrect ? '✓ ตอบถูกต้องทั้งหมดในข้อนี้' : '✗ มีบางข้อที่คุณตอบไม่ถูกต้อง (ดูเฉลยด้านบน)'}
+    </div>
+    <div>${q.explanation}</div>
+  `;
+
+  document.getElementById("check-btn").style.display = "none";
+  document.getElementById("next-btn").style.display = "inline-block";
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex < questions.length) {
+    renderQuestion();
+  } else {
+    document.getElementById("quiz-card").innerHTML = `
+      <div style="text-align: center; padding: 20px 0;">
+        <h2>สรุปผลการทดสอบ: Lecture 4</h2>
+        <p style="font-size: 18px; color: #475569;">การพยาบาลผู้ป่วยศัลยกรรมระบบทางเดินปัสสาวะ</p>
+        <p style="font-size: 22px; margin: 20px 0;">คะแนนรวม: <strong>${score} / ${questions.length}</strong></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 24px;">
+          <a href="index.html" class="btn" style="background:#64748b;">กลับหน้าหลัก</a>
+          <button class="btn" onclick="location.reload()">ทำอีกครั้ง (สุ่มโจทย์ใหม่)</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+window.onload = initQuiz;
+</script>
+</body>
+</html>

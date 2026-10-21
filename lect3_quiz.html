@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture 2: Burn & Electrolyte Quiz (Fixed)</title>
+  <style>
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+      color: #0f172a;
+    }
+    .quiz-card {
+      max-width: 680px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .badge {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .question-title { font-size: 18px; line-height: 1.6; margin-bottom: 16px; color: #1e293b; }
+    
+    .lab-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #f8fafc;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    .lab-table th, .lab-table td {
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .lab-table th { background: #edf2f7; color: #475569; font-weight: 600; }
+    
+    .sub-question {
+      margin-top: 16px;
+      padding: 16px;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .sub-question.status-correct {
+      border-color: #22c55e;
+      background-color: #f0fdf4;
+    }
+    .sub-question.status-incorrect {
+      border-color: #ef4444;
+      background-color: #fef2f2;
+    }
+
+    .sub-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-tag {
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status-tag.correct { color: #15803d; background: #dcfce7; }
+    .status-tag.incorrect { color: #b91c1c; background: #fee2e2; }
+
+    .options-grid { display: flex; flex-direction: column; gap: 8px; }
+    .option-btn {
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      background-color: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .option-btn:hover:not(:disabled) { background-color: #f1f5f9; border-color: #94a3b8; }
+    .option-btn.selected { background-color: #e0e7ff; border-color: #6366f1; color: #312e81; }
+    .option-btn.correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; font-weight: 600; }
+    .option-btn.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+    
+    .feedback-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      border-left: 4px solid #4f46e5;
+      display: none;
+      line-height: 1.6;
+    }
+    .controls { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .btn {
+      padding: 10px 20px;
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background-color: #4338ca; }
+    .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<div class="quiz-card" id="quiz-card">
+  <span class="badge" id="type-badge">Burn & Electrolyte</span>
+  <div class="question-title" id="question-text">กำลังโหลด...</div>
+  <div id="lab-display"></div>
+  <div id="sub-questions-container"></div>
+  <div class="feedback-box" id="feedback-box"></div>
+  <div class="controls">
+    <span id="progress-text" style="font-size: 14px; color: #64748b;"></span>
+    <button class="btn" id="check-btn" onclick="checkAnswer()">ตรวจคำตอบ</button>
+    <button class="btn" id="next-btn" style="display:none;" onclick="nextQuestion()">ข้อถัดไป</button>
+  </div>
+</div>
+
+<script>
+function getRandomBounded(base, marginPct = 0.15, decimals = 1) {
+  const min = base * (1 - marginPct);
+  const max = base * (1 + marginPct);
+  const val = Math.random() * (max - min) + min;
+  return Number(val.toFixed(decimals));
+}
+
+function shuffle(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
+let userSelections = {};
+
+// Generator 1: %TBSA Burn Assessment
+function generateTBSAQuestion() {
+  const scenarios = [
+    {
+      desc: "ผู้ใหญ่มีแผลไหม้ full-thickness ที่ลำตัวด้านหลังทั้งหมด และ superficial partial-thickness ที่ด้านหน้าศีรษะและคอ ร่วมกับแผลไหม้ superficial (first-degree) ที่แขนซ้ายทั้งแขน",
+      correct: 22.5,
+      explanation: "• ลำตัวด้านหลังทั้งหมด = 18%<br>• ด้านหน้าศีรษะและคอ = 4.5%<br>• <i>หมายเหตุ:</i> แผลไหม้ Superficial (1st-degree) ที่แขนซ้ายจะไม่นำมาคำนวณใน %TBSA<br><strong>รวม %TBSA = 18 + 4.5 = 22.5%</strong>"
+    },
+    {
+      desc: "ผู้ใหญ่มีแผลไหม้ partial-thickness ที่ขาขวาด้านหน้าทั้งหมด (9%) และลำตัวด้านหน้าทั้งหมด (18%) ร่วมกับแผลไหม้ full-thickness ที่อวัยวะเพศ (1%)",
+      correct: 28,
+      explanation: "• ขาขวาด้านหน้า = 9%<br>• ลำตัวด้านหน้าทั้งหมด = 18%<br>• อวัยวะเพศ (Perineum) = 1%<br><strong>รวม %TBSA = 9 + 18 + 1 = 28%</strong>"
+    }
+  ];
+
+  const selected = scenarios[Math.floor(Math.random() * scenarios.length)];
+  const correctVal = selected.correct;
+  
+  const setOpts = new Set([`${correctVal}%`]);
+  const presets = [correctVal + 9, correctVal - 4.5, correctVal + 4.5, correctVal + 5, correctVal - 9];
+  
+  for (let p of presets) {
+    if (p > 0 && setOpts.size < 4) {
+      setOpts.add(`${Number(p.toFixed(1))}%`);
+    }
+  }
+
+  return {
+    category: "ประเมิน %TBSA",
+    prompt: selected.desc,
+    subQuestions: [
+      {
+        id: "tbsa_val",
+        title: "จงคำนวณหา %TBSA จากกรณีศึกษาข้างต้น",
+        options: shuffle(Array.from(setOpts)),
+        answer: `${correctVal}%`
+      }
+    ],
+    explanation: selected.explanation
+  };
+}
+
+// Generator 2: ABG Interpretation
+function generateABGQuestion() {
+  const profiles = [
+    {
+      ph: getRandomBounded(7.47, 0.01, 2),
+      paco2: Math.round(getRandomBounded(30, 0.03, 0)),
+      hco3: Math.round(getRandomBounded(20, 0.03, 0)),
+      phState: "alkalemia",
+      primary: "respiratory alkalosis",
+      comp: "partially compensated",
+      exp: "pH > 7.45 (Alkalemia), PaCO₂ < 35 mmHg (Primary Respiratory Alkalosis) และ HCO₃⁻ < 22 mmol/L (มีการชดเชยทางเมตาบอลิกแล้วบางส่วน)"
+    },
+    {
+      ph: getRandomBounded(7.28, 0.01, 2),
+      paco2: Math.round(getRandomBounded(52, 0.03, 0)),
+      hco3: Math.round(getRandomBounded(28, 0.03, 0)),
+      phState: "acidemia",
+      primary: "respiratory acidosis",
+      comp: "partially compensated",
+      exp: "pH < 7.35 (Acidemia), PaCO₂ > 45 mmHg (Primary Respiratory Acidosis) และ HCO₃⁻ > 26 mmol/L (มีการชดเชยทางเมตาบอลิกแล้วบางส่วน)"
+    }
+  ];
+
+  const p = profiles[Math.floor(Math.random() * profiles.length)];
+
+  return {
+    category: "แก๊สในเลือด (ABG)",
+    prompt: "ผู้ใหญ่หายใจเร็วต่อเนื่องและเริ่มมีการชดเชยทางเมตาบอลิก ผล ABG แสดงดังต่อไปนี้",
+    labData: [
+      { name: "pH", val: p.ph },
+      { name: "PaCO₂", val: `${p.paco2} mmHg` },
+      { name: "HCO₃⁻", val: `${p.hco3} mmol/L` }
+    ],
+    subQuestions: [
+      {
+        id: "ph_state",
+        title: "1. ภาวะ pH",
+        options: ["acidemia", "alkalemia", "อยู่ในช่วงปกติ"],
+        answer: p.phState
+      },
+      {
+        id: "primary_err",
+        title: "2. ความผิดปกติหลัก",
+        options: ["metabolic acidosis", "metabolic alkalosis", "respiratory acidosis", "respiratory alkalosis"],
+        answer: p.primary
+      },
+      {
+        id: "comp_state",
+        title: "3. สถานะการชดเชย",
+        options: ["uncompensated", "partially compensated", "fully compensated"],
+        answer: p.comp
+      }
+    ],
+    explanation: p.exp
+  };
+}
+
+// Generator 3: Electrolyte Interpretation
+function generateElectrolyteQuestion() {
+  const kVal = getRandomBounded(6.4, 0.05, 1);
+  const naVal = 138; // คุม Normal range เพื่อป้องกัน Bug เฉลยผิดพลาด
+  const caVal = 9.2;
+  const mgVal = 2.0;
+
+  // Dynamic Validation เช็คช่วงปกติ
+  const abnormalList = [];
+  if (kVal < 3.5 || kVal > 5.0) abnormalList.push("K⁺");
+  if (naVal < 135 || naVal > 145) abnormalList.push("Na⁺");
+  if (caVal < 8.5 || caVal > 10.5) abnormalList.push("total serum Ca");
+  if (mgVal < 1.7 || mgVal > 2.2) abnormalList.push("Mg²⁺");
+
+  return {
+    category: "แปลผลอิเล็กโทรไลต์",
+    prompt: "ผู้ใหญ่โรคไตเรื้อรังใช้ ACE inhibitor ร่วมกับยาขับปัสสาวะชนิดเก็บโพแทสเซียม มีอาการอ่อนแรง ผลตรวจแสดงดังต่อไปนี้",
+    labData: [
+      { name: "Na⁺", val: `${naVal} mEq/L` },
+      { name: "K⁺", val: `${kVal} mEq/L` },
+      { name: "total serum Ca", val: `${caVal} mg/dL` },
+      { name: "Mg²⁺", val: `${mgVal} mg/dL` }
+    ],
+    subQuestions: [
+      {
+        id: "abnormal_vals",
+        title: "1. ค่าที่ผิดปกติ (เลือกทั้งหมด)",
+        isMulti: true,
+        options: ["Na⁺", "K⁺", "total serum Ca", "Mg²⁺"],
+        answer: abnormalList
+      },
+      {
+        id: "urgent_problem",
+        title: "2. ปัญหาเร่งด่วนที่สุด",
+        options: [
+          "hyperkalemia จากยาร่วม CKD และความเสี่ยง arrhythmia",
+          "hypocalcemia",
+          "hypomagnesemia",
+          "hypernatremia"
+        ],
+        answer: "hyperkalemia จากยาร่วม CKD และความเสี่ยง arrhythmia"
+      },
+      {
+        id: "monitoring",
+        title: "3. การเฝ้าระวังที่ต้องทำ (เลือกทั้งหมด)",
+        isMulti: true,
+        options: [
+          "ECG/continuous cardiac rhythm",
+          "ตรวจ K⁺ ซ้ำตามแผน",
+          "ตรวจ total serum Ca ซ้ำอย่างเดียว",
+          "ตรวจการมองเห็น"
+        ],
+        answer: ["ECG/continuous cardiac rhythm", "ตรวจ K⁺ ซ้ำตามแผน"]
+      }
+    ],
+    explanation: `• K⁺ = ${kVal} mEq/L (สูงกว่าปกติ > 5.0 mEq/L)<br>• ปัญหาเร่งด่วน: ภาวะ Hyperkalemia รุนแรงเสี่ยงต่อหัวใจเต้นผิดจังหวะ (Arrhythmia)<br>• การเฝ้าระวัง: ต้องติด ECG ติดตามคลื่นไฟฟ้าหัวใจทันที และตรวจระดับ K⁺ ซ้ำ`
+  };
+}
+
+function buildQuestionBank(totalRequested) {
+  const bank = [];
+  const generators = [generateTBSAQuestion, generateABGQuestion, generateElectrolyteQuestion];
+
+  for (let i = 0; i < totalRequested; i++) {
+    const genFunc = generators[i % generators.length];
+    bank.push(genFunc());
+  }
+
+  return shuffle(bank);
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const totalRequested = parseInt(urlParams.get('count')) || 5;
+
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+
+function initQuiz() {
+  questions = buildQuestionBank(totalRequested);
+  currentIndex = 0;
+  score = 0;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  userSelections = {};
+  const q = questions[currentIndex];
+  
+  document.getElementById("type-badge").innerText = q.category;
+  document.getElementById("question-text").innerText = q.prompt;
+  document.getElementById("progress-text").innerText = `ข้อที่ ${currentIndex + 1} จาก ${questions.length}`;
+
+  const labContainer = document.getElementById("lab-display");
+  labContainer.innerHTML = "";
+  if (q.labData) {
+    let tableHTML = `<table class="lab-table"><thead><tr><th>รายการตรวจ</th><th>ผลการตรวจ</th></tr></thead><tbody>`;
+    q.labData.forEach(row => {
+      tableHTML += `<tr><td><strong>${row.name}</strong></td><td>${row.val}</td></tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+    labContainer.innerHTML = tableHTML;
+  }
+
+  const subContainer = document.getElementById("sub-questions-container");
+  subContainer.innerHTML = "";
+
+  q.subQuestions.forEach((sq) => {
+    const sqDiv = document.createElement("div");
+    sqDiv.className = "sub-question";
+    sqDiv.id = `sub-card-${sq.id}`;
+
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "sub-title";
+    titleDiv.innerHTML = `<span>${sq.title}</span><span class="status-tag" id="tag-${sq.id}" style="display:none;"></span>`;
+    sqDiv.appendChild(titleDiv);
+
+    const optGrid = document.createElement("div");
+    optGrid.className = "options-grid";
+
+    sq.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerText = opt;
+      btn.dataset.sqid = sq.id;
+      btn.dataset.optval = opt;
+      btn.onclick = () => selectOption(sq.id, opt, sq.isMulti, btn);
+      optGrid.appendChild(btn);
+    });
+
+    sqDiv.appendChild(optGrid);
+    subContainer.appendChild(sqDiv);
+  });
+
+  document.getElementById("feedback-box").style.display = "none";
+  document.getElementById("check-btn").style.display = "inline-block";
+  document.getElementById("next-btn").style.display = "none";
+}
+
+function selectOption(sqId, optionVal, isMulti, btnElement) {
+  if (isMulti) {
+    if (!userSelections[sqId]) userSelections[sqId] = [];
+    const index = userSelections[sqId].indexOf(optionVal);
+    
+    if (index > -1) {
+      userSelections[sqId].splice(index, 1);
+      btnElement.classList.remove("selected");
+    } else {
+      userSelections[sqId].push(optionVal);
+      btnElement.classList.add("selected");
+    }
+  } else {
+    userSelections[sqId] = optionVal;
+    const parentGrid = btnElement.parentElement;
+    Array.from(parentGrid.children).forEach(child => child.classList.remove("selected"));
+    btnElement.classList.add("selected");
+  }
+}
+
+function checkAnswer() {
+  const q = questions[currentIndex];
+
+  // Validation: บังคับให้ผู้ตอบเลือกคำตอบให้ครบทุกข้อก่อนตรวจ
+  const answeredCount = Object.keys(userSelections).filter(key => {
+    const val = userSelections[key];
+    return Array.isArray(val) ? val.length > 0 : val !== undefined;
+  }).length;
+
+  if (answeredCount < q.subQuestions.length) {
+    alert("กรุณาตอบคำถามย่อยให้ครบถ้วนก่อนกดตรวจคำตอบครับ");
+    return;
+  }
+
+  let overallCorrect = true;
+
+  q.subQuestions.forEach(sq => {
+    const userAns = userSelections[sq.id];
+    const cardElement = document.getElementById(`sub-card-${sq.id}`);
+    const tagElement = document.getElementById(`tag-${sq.id}`);
+    let isItemCorrect = false;
+
+    if (sq.isMulti) {
+      const uSet = new Set(userAns || []);
+      const aSet = new Set(sq.answer);
+      if (uSet.size === aSet.size && [...uSet].every(val => aSet.has(val))) {
+        isItemCorrect = true;
+      }
+    } else {
+      if (userAns === sq.answer) {
+        isItemCorrect = true;
+      }
+    }
+
+    if (!isItemCorrect) overallCorrect = false;
+
+    cardElement.classList.add(isItemCorrect ? "status-correct" : "status-incorrect");
+    tagElement.style.display = "inline-block";
+    tagElement.className = `status-tag ${isItemCorrect ? 'correct' : 'incorrect'}`;
+    tagElement.innerText = isItemCorrect ? "✓ ถูกต้อง" : "✗ ผิด";
+
+    const buttons = cardElement.querySelectorAll(".option-btn");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      const optVal = btn.dataset.optval;
+
+      if (sq.isMulti) {
+        const isSelected = (userAns || []).includes(optVal);
+        const isAnswer = sq.answer.includes(optVal);
+
+        if (isSelected && isAnswer) {
+          btn.classList.add("correct");
+        } else if (isSelected && !isAnswer) {
+          btn.classList.add("incorrect");
+        } else if (!isSelected && isAnswer) {
+          btn.classList.add("correct");
+        }
+      } else {
+        if (optVal === sq.answer) {
+          btn.classList.add("correct");
+        } else if (userAns === optVal) {
+          btn.classList.add("incorrect");
+        }
+      }
+    });
+  });
+
+  if (overallCorrect) score++;
+
+  const feedbackBox = document.getElementById("feedback-box");
+  feedbackBox.style.display = "block";
+  feedbackBox.innerHTML = `
+    <div style="color: ${overallCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold; margin-bottom: 6px;">
+      ${overallCorrect ? '✓ ตอบถูกต้องทั้งหมดในข้อนี้' : '✗ มีบางข้อที่คุณตอบไม่ถูกต้อง (ดูเฉลยด้านบน)'}
+    </div>
+    <div>${q.explanation}</div>
+  `;
+
+  document.getElementById("check-btn").style.display = "none";
+  document.getElementById("next-btn").style.display = "inline-block";
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex < questions.length) {
+    renderQuestion();
+  } else {
+    document.getElementById("quiz-card").innerHTML = `
+      <div style="text-align: center; padding: 20px 0;">
+        <h2>สรุปผลการทดสอบ: Lecture 2</h2>
+        <p style="font-size: 20px; margin: 16px 0;">คะแนนรวม (ข้อที่ถูกทั้งหมด): <strong>${score} / ${questions.length}</strong></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+          <a href="index.html" class="btn" style="background:#64748b;">กลับหน้าหลัก</a>
+          <button class="btn" onclick="location.reload()">ทำอีกครั้ง (สุ่มโจทย์ใหม่)</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+window.onload = initQuiz;
+</script>
+</body>
+</html>
