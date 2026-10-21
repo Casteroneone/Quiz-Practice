@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบคลังแบบทดสอบ (Quiz Portal)</title>
+  <style>
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 40px 20px;
+      color: #0f172a;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    h1 { font-size: 22px; margin-bottom: 12px; color: #1e293b; text-align: center; }
+    .lecture-btn {
+      width: 100%;
+      padding: 16px 20px;
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .lecture-btn:hover { background-color: #4338ca; }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal {
+      background: #ffffff;
+      padding: 28px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .modal h2 { font-size: 18px; margin-top: 0; margin-bottom: 16px; }
+    .modal input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .btn-secondary {
+      padding: 10px 16px;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-primary {
+      padding: 10px 16px;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>ระบบแบบทดสอบประเมินผล</h1>
+    <!-- ส่งชื่อไฟล์ target ไปยัง openModal -->
+    <button class="lecture-btn" onclick="openModal('lect3_quiz.html')">
+      <span>Lecture 3: Burn and Electrolyte</span>
+      <span>→</span>
+    </button>
+    <button class="lecture-btn" onclick="openModal('lect4_quiz.html')">
+      <span>Lecture 4: Urological Surgical Nursing</span>
+      <span>→</span>
+    </button>
+    <button class="lecture-btn" onclick="openModal('lect6_quiz.html')">
+      <span>Lecture 6: Endocrine and Breast</span>
+      <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal">
+    <h2>กำหนดจำนวนข้อสอบ</h2>
+    <label for="q-count" style="font-size: 14px; color: #475569; display: block; margin-bottom: 8px;">
+      ต้องการทำแบบทดสอบกี่ข้อ? (แนะนำ 1-10 ข้อ)
+    </label>
+    <input type="number" id="q-count" value="5" min="1" max="20">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="startQuiz()">เริ่มทำแบบทดสอบ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ตัวแปรสำหรับเก็บไฟล์ quiz ที่ผู้ใช้เลือก
+  let currentTargetQuiz = '';
+
+  function openModal(targetFile) {
+    currentTargetQuiz = targetFile;
+    document.getElementById('config-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('config-modal').style.display = 'none';
+  }
+
+  function startQuiz() {
+    const count = document.getElementById('q-count').value || 5;
+    // Redirect ไปยังไฟล์ที่เลือกไว้พร้อมจำนวนข้อสอบ
+    if (currentTargetQuiz) {
+      window.location.href = `${currentTargetQuiz}?count=${count}`;
+    }
+  }
+</script>
+
+</body>
+</html>
